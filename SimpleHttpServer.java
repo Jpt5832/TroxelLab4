@@ -1,10 +1,17 @@
+/** Project: Systems integration assignment (Solo lab 3)
+ * Purpose Details: send/receive pizza flat file data/Json payloads using rabbitmq and web server
+ * Course: IST242
+ * Author: Jayson Troxel
+ * Date Developed: 10/19/24
+ * Last Date Changed: 10/20/24
+ * Rev: 2
+ */
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -14,17 +21,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SimpleHttpServer {
-        public static void main(String[] args) throws Exception {
+
+    /**
+     * Main method starts web server, creates pizza object, serializes that pizza object into json payload and sends
+     * it to be received.
+     * @param args program arguments
+     * @throws Exception basic exception
+     */
+    public static void main(String[] args) throws Exception {
             HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
-            server.createContext("/hello", new MyHandler());
+            server.createContext("/pizzashop", new MyHandler());
             server.setExecutor(null); // creates a default executor
             server.start();
+            System.out.println("Server started! Sending messages...");
         }
 
-        static class MyHandler implements HttpHandler {
+    /**
+     * Creates pizza object, serializes it, and sends it as a message to be received
+     */
+    static class MyHandler implements HttpHandler {
             @Override
             public void handle(HttpExchange exchange) throws IOException {
-                Pizza myPizza = new Pizza(1000, "myPizza", 16.99, "Medium", "Bacon");
+                Pizza myPizza = new Pizza(1000, "myPizza5", 16.99, "Medium", "Pepperoni");
                 List<Pizza> pizzas = new ArrayList<>();
                 pizzas.add(myPizza);
 
@@ -50,6 +68,8 @@ public class SimpleHttpServer {
                     e.printStackTrace();
                 }
                 String response = pizzaJson;
+
+                //Send message
                 exchange.sendResponseHeaders(200, response.getBytes().length);
                 OutputStream os = exchange.getResponseBody();
                 os.write(response.getBytes());

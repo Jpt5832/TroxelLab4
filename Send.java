@@ -1,4 +1,16 @@
+
+/** Project: Systems integration assignment (Solo lab 3)
+ * Purpose Details: send/receive pizza flat file data/Json payloads using rabbitmq and web server
+ * Course: IST242
+ * Author: Jayson Troxel
+ * Date Developed: 10/19/24
+ * Last Date Changed: 10/20/24
+ * Rev: 2
+ */
+
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,8 +21,15 @@ import com.rabbitmq.client.ConnectionFactory;
 
 public class Send {
 
+        //Rabbitmq queue name
         private final static String QUEUE_NAME = "pizzashop";
-        public static void main(String[] args) throws Exception {
+
+    /**
+     * Main method creates a pizza flat file, reads that flat file and sends the flat file data to the pizzashop queue to be received
+     * @param args Program arguments
+     * @throws Exception basic exception
+     */
+    public static void main(String[] args) throws Exception {
             ConnectionFactory factory = new ConnectionFactory();
             factory.setHost("localhost");
 
@@ -34,14 +53,15 @@ public class Send {
                 e.printStackTrace();
             }
 
+            //Writes pizza objects to a fixed flat file
             List<Pizza> loadedPizzas = new ArrayList<>();
             try (BufferedReader reader = new BufferedReader(new FileReader("pizzas.txt"))) {
                 String line;
+
                 while ((line = reader.readLine()) != null) {
                     loadedPizzas.add(Pizza.fromFixedFormatString(line));
                     System.out.println("Pizzas in flat file: " + line);
                 }
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -60,14 +80,13 @@ public class Send {
             try (Connection connection = factory.newConnection();
                  Channel channel = connection.createChannel()) {
                 channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-                String message = pizzaJson;
-                // Read the flat file
-                //byte[] fileData = Files.readAllBytes(Paths.get("/Users/jaysontroxel/IdeaProjects/Lab4Troxel/pizzas.txt"));
 
-                // Publish the file data as a message
-                //channel.basicPublish("", QUEUE_NAME, null, fileData);
-                channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
-                System.out.println(" RabbitMQ Sent '" + message + "' to queue");
+                // Read the flat file and get the bytes
+               byte[] fileData = Files.readAllBytes(Paths.get("/Users/jaysontroxel/IdeaProjects/Lab4Troxel/pizzas.txt"));
+
+                // Publish the file data as a message to the pizzashop queue
+                channel.basicPublish("", QUEUE_NAME, null, fileData);
+                System.out.println(" RabbitMQ Sent Flat File Data to queue");
 
             }
         }
